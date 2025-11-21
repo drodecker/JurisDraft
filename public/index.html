@@ -483,6 +483,13 @@
             statusMessage.innerHTML = `<div class="status ${type}">${message}</div>`;
         }
 
+        // Clean up object URL on page unload to prevent memory leaks
+        window.addEventListener('beforeunload', () => {
+            if (currentPDFUrl) {
+                URL.revokeObjectURL(currentPDFUrl);
+            }
+        });
+
         // Event listeners
         fillBtn.addEventListener('click', fillPDF);
         submitBtn.addEventListener('click', submitAdditionalJSON);

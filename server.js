@@ -16,13 +16,15 @@ const apiLimiter = rateLimit({
 });
 
 app.use(cors());
-app.use(express.json({ limit: '50mb' }));
+app.use(express.json({ limit: '10mb' })); // Reasonable limit for JSON payloads
 app.use(express.static('public'));
 app.use('/api/', apiLimiter); // Apply rate limiting to all API routes
 
 // Store the current filled PDF in memory for preview and download
-// NOTE: This is a simple in-memory storage suitable for single-user development.
-// For production with multiple concurrent users, use session storage or a database.
+// NOTE: This is a simple in-memory storage suitable for single-user development/testing.
+// LIMITATION: Multiple concurrent users will overwrite each other's PDFs (race condition).
+// For production with multiple users, implement session-based storage (e.g., express-session),
+// use Redis, or store files temporarily with unique user/session identifiers.
 let currentFilledPDF = null;
 let currentPDFName = null;
 
