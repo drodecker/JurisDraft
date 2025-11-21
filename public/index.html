@@ -321,6 +321,7 @@
         const fieldStats = document.getElementById('fieldStats');
 
         let currentPDFData = null;
+        let currentPDFUrl = null; // Track the current object URL for cleanup
 
         // Load templates on page load
         async function loadTemplates() {
@@ -401,10 +402,15 @@
 
                 currentPDFData = result.pdfData;
 
+                // Revoke previous object URL to prevent memory leak
+                if (currentPDFUrl) {
+                    URL.revokeObjectURL(currentPDFUrl);
+                }
+
                 // Display PDF in viewer
                 const blob = base64ToBlob(result.pdfData, 'application/pdf');
-                const url = URL.createObjectURL(blob);
-                pdfViewer.innerHTML = `<iframe src="${url}"></iframe>`;
+                currentPDFUrl = URL.createObjectURL(blob);
+                pdfViewer.innerHTML = `<iframe src="${currentPDFUrl}"></iframe>`;
 
                 // Show status
                 showStatus(

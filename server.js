@@ -3,15 +3,26 @@ const fs = require('fs').promises;
 const path = require('path');
 const { PDFDocument } = require('pdf-lib');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Rate limiting to prevent abuse
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.'
+});
+
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static('public'));
+app.use('/api/', apiLimiter); // Apply rate limiting to all API routes
 
 // Store the current filled PDF in memory for preview and download
+// NOTE: This is a simple in-memory storage suitable for single-user development.
+// For production with multiple concurrent users, use session storage or a database.
 let currentFilledPDF = null;
 let currentPDFName = null;
 
@@ -49,7 +60,8 @@ app.post('/api/fill-pdf', async (req, res) => {
         // Check if file exists
         try {
             await fs.access(templatePath);
-        } catch {
+        } catch (error) {
+            console.error('Template access error:', error);
             return res.status(404).json({ error: 'Template not found' });
         }
 
